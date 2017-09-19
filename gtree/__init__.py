@@ -10,7 +10,7 @@ charset = [
 
 def tree(nodes_list, children_property=None, extra_children_properties=None,
          addtoprefix=None, _level=0, _node_index=0, _level_meta=(),
-         indent=3, _output_tree=None):
+         indent=3, _output_tree=None, editfield=None):
     if _output_tree is None:
         _output_tree = []
     back_up_list = tuple(nodes_list)
@@ -33,7 +33,10 @@ def tree(nodes_list, children_property=None, extra_children_properties=None,
             extra_children_property = []
             for property_ in extra_children_properties:
                 try:
-                    extra_children_property += [getattr(obj, property_)]
+                    field = getattr(obj, property_)
+                    if editfield is not None:
+                        field = editfield(property=property_, value=field)
+                    extra_children_property += [field]
                 except AttributeError:
                     if not extra_children_property:
                         extra_children_property = []
@@ -70,12 +73,13 @@ def tree(nodes_list, children_property=None, extra_children_properties=None,
             tobeadded = addtoprefix(level=_level)
 
         line = str(obj)
+
         _output_tree.append((prefix + tobeadded, line, obj))
         if children_size > 0:
             _level_meta = ((_level, _node_index, list_size),) + _level_meta
             tree(children, _level=_level + 1, _level_meta=_level_meta, _output_tree=_output_tree,
                  children_property=children_property, extra_children_properties=extra_children_properties,
-                 addtoprefix=addtoprefix)
+                 addtoprefix=addtoprefix, editfield=editfield)
         _node_index += 1
 
     return _output_tree
